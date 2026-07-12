@@ -1,0 +1,67 @@
+/* ------------------------------------------------------------------
+   Design tokens — "late-night study desk" theme
+   Change values here; components should not hardcode colors/fonts.
+   ------------------------------------------------------------------ */
+:root {
+  /* palette */
+  --ink-900: #12172b;   /* app background — a study lamp's dark room */
+  --ink-800: #1b2140;
+  --ink-700: #262d52;
+  --paper: #f5f3ec;      /* assistant bubble — index-card paper */
+  --paper-dim: #e8e5da;
+  --lamp: #e8a33d;       /* accent — desk-lamp amber */
+  --lamp-dim: #caa46b;
+  --ok: #4caf7d;
+  --err: #e2685c;
+  --ink-text: #eef0fa;
+  --paper-text: #21243a;
+
+  /* type */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  /* layout */
+  --radius: 10px;
+  --gap: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--ink-900);
+  color: var(--ink-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+/* visible focus ring everywhere — accessibility floor */
+:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
