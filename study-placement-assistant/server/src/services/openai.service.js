@@ -4,69 +4,81 @@ let client = null;
 
 function getClient() {
   if (!client) {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not set. Add it to server/.env");
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error("GROQ_API_KEY is not set. Add it to server/.env");
     }
-    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    client = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1",
+    });
   }
+
   return client;
 }
 
-const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const MODEL =
+  process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
 /**
- * Streams a chat completion, calling onToken(chunk) for every text delta.
- * Used by /api/chat so the frontend can render text as it arrives.
+ * Streaming chat completion
  */
 export async function streamChatCompletion(messages, onToken) {
-  const openai = getClient();
-  const stream = await openai.chat.completions.create({
+  const client = getClient();
+
+  const stream = await client.chat.completions.create({
     model: MODEL,
     messages,
-    temperature: 0.4,
     stream: true,
   });
 
   let fullText = "";
-  for await (const part of stream) {
-    const delta = part.choices?.[0]?.delta?.content || "";
-    if (delta) {
-      fullText += delta;
-      onToken(delta);
+
+  for await (const chunk of stream) {
+    const text = chunk.choices?.[0]?.delta?.content || "";
+
+    if (text) {
+      fullText += text;
+      onToken(text);
     }
   }
+
   return fullText;
 }
 
 /**
- * Non-streaming call that expects the model to return JSON (used for
- * quiz / interview generation, where the frontend needs a parsed structure
- * rather than a token stream).
+ * JSON completion
  */
 export async function getJsonCompletion(messages) {
-  const openai = getClient();
-  const response = await openai.chat.completions.create({
+  const client = getClient();
+
+  const response = await client.chat.completions.create({
     model: MODEL,
-    messages,
-    temperature: 0.5,
-    response_format: { type: "json_object" },
+    messages: [
+      ...messages,
+      {
+        role: "system",
+        content: "Return only valid JSON. No markdown.",
+      },
+    ],
+    response_format: {
+      type: "json_object",
+    },
   });
 
-  const raw = response.choices?.[0]?.message?.content || "{}";
-  try {
-    return JSON.parse(raw);
-  } catch (err) {
-    throw new Error(`Model did not return valid JSON: ${err.message}`);
-  }
+  return JSON.parse(response.choices[0].message.content);
 }
 
-/** Plain (non-streaming, non-JSON) completion — used for notes/summary text. */
+/**
+ * Normal text completion
+ */
 export async function getTextCompletion(messages) {
-  const openai = getClient();
-  const response = await openai.chat.completions.create({
+  const client = getClient();
+
+  const response = await client.chat.completions.create({
     model: MODEL,
     messages,
-    temperature: 0.5,
   });
-  return response.choices?.[0]?.message?.content || "";
+
+  return response.choices[0].message.content;
 }

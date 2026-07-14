@@ -4,8 +4,9 @@ export async function connectDB() {
   const uri = process.env.MONGO_URI || "mongodb://localhost:27017/studymate";
 
   try {
-    await mongoose.connect(uri);
     console.log(`[db] connected to MongoDB at ${uri}`);
+    await mongoose.connect(uri);
+    
   } catch (err) {
     console.error("[db] MongoDB connection failed:", err.message);
     // Don't crash the whole server just because Mongo is briefly unavailable
